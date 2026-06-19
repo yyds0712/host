@@ -3,6 +3,12 @@ import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../components/FormattedDate.astro';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
 ---
 
 <!doctype html>
@@ -13,35 +19,62 @@ import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 你好，宇航员！</h1>
-			<p>
-				欢迎来到官方的 <a href="https://astro.build/">Astro</a> 博客起始模板。这个
-				模板是一个轻量级、极简风格的起点，适合任何希望使用 Astro 搭建个人网站、
-				博客或作品集的人。
-			</p>
-			<p>
-				此模板已在您的 <code>astro.config.mjs</code> 文件中预先配置了几个集成。您可以通过
-				<a href="https://astro.build/integrations">Astro 集成</a> 自定义设置，
-				为项目添加 Tailwind、React 或 Vue 等工具。
-			</p>
-			<p>以下是一些关于如何使用此模板入门的建议：</p>
-			<ul>
-				<li>在 <code>src/pages/index.astro</code> 中编辑此页面</li>
-				<li>在 <code>src/components/Header.astro</code> 中编辑站点页眉项目</li>
-				<li>在 <code>src/components/Footer.astro</code> 中将您的名字添加到页脚</li>
-				<li>查看 <code>src/content/blog/</code> 中附带的博客文章</li>
-				<li>在 <code>src/layouts/BlogPost.astro</code> 中自定义博客文章页面布局</li>
-			</ul>
-			<p>
-				玩得开心！如果遇到问题，记得 <a href="https://docs.astro.build/">查阅文档</a>
-				或 <a href="https://astro.build/chat">加入我们的 Discord</a> 提问。
-			</p>
-			<p>
-				想要一个更具个性的博客模板？看看 <a href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a>，作者是 <a href="https://twitter.com/Charca">Maxi Ferreira</a>。
-			</p>
+			<section class="hero">
+				<h1>欢迎来到 AI with Me</h1>
+				<p class="tagline">一个大学生在 AI 时代的生活记录</p>
+				<p class="subtitle">这里有我用过的工具、踩过的坑、和每个普通却又值得记录的日常。</p>
+			</section>
+			<hr />
+			<section class="latest-posts">
+				<h2>最新文章</h2>
+				<ul>
+					{
+						posts.slice(0, 3).map((post) => (
+							<li>
+								<a href={`/blog/${post.id}/`}>
+									<h3>{post.data.title}</h3>
+									<p class="date"><FormattedDate date={post.data.pubDate} /></p>
+								</a>
+							</li>
+						))
+					}
+				</ul>
+				<p class="more"><a href="/blog/">查看全部文章 →</a></p>
+			</section>
 		</main>
 		<Footer />
 	</body>
 </html>
+<style>
+	.hero {
+		text-align: center;
+		padding: 2em 0;
+	}
+	.tagline {
+		font-size: 1.5em;
+		color: var(--accent);
+		margin-bottom: 0.5em;
+	}
+	.subtitle {
+		color: rgb(var(--gray));
+		font-size: 1.1em;
+	}
+	.latest-posts ul {
+		list-style: none;
+		padding: 0;
+	}
+	.latest-posts li {
+		margin-bottom: 1.5em;
+	}
+	.latest-posts li a {
+		text-decoration: none;
+	}
+	.latest-posts .date {
+		color: rgb(var(--gray));
+		font-size: 0.9em;
+		margin: 0.2em 0 0 0;
+	}
+	.more {
+		margin-top: 2em;
+	}
+</style>
