@@ -1,94 +1,24 @@
 ---
-// Custom comment component
-// Backend: Cloudflare Worker + KV
-const API = 'https://aiwithme-comments.1683066.workers.dev';
+// Twikoo comment system
+// Backend: Cloudflare Workers + D1
 ---
 
-<section class="comment-wrapper">
+<section class="twikoo-wrapper">
 	<h2 class="comments-title">评论</h2>
-	<div id="comment-app">
-		<div id="comment-form">
-			<input type="text" id="comment-author" placeholder="你的昵称" maxlength="50" />
-			<textarea id="comment-content" placeholder="说说你的想法..." maxlength="2000" rows="4"></textarea>
-			<button id="comment-submit">发表评论</button>
-			<p id="comment-status"></p>
-		</div>
-		<div id="comment-list"></div>
-	</div>
+	<div id="tcomment"></div>
 </section>
 
 <script is:inline>
-	const API = 'https://aiwithme-comments.1683066.workers.dev';
-
-	async function loadComments() {
-		const path = location.pathname.replace(/\/$/, '') || '/';
-		const list = document.getElementById('comment-list');
-		try {
-			const res = await fetch(API + '/api/comments?page=' + encodeURIComponent(path));
-			const data = await res.json();
-			if (data.comments && data.comments.length > 0) {
-				list.innerHTML = data.comments.map(c =>
-					`<div class="comment-item">
-						<div class="comment-author">${escapeHtml(c.author)}</div>
-						<div class="comment-time">${new Date(c.createdAt).toLocaleString('zh-CN')}</div>
-						<div class="comment-content">${escapeHtml(c.content)}</div>
-					</div>`
-				).join('');
-			} else {
-				list.innerHTML = '<p class="comment-empty">还没有评论，来坐沙发吧！</p>';
-			}
-		} catch (e) {
-			list.innerHTML = '<p class="comment-empty">评论加载失败，请刷新重试</p>';
-		}
-	}
-
-	function escapeHtml(text) {
-		const d = document.createElement('div');
-		d.textContent = text;
-		return d.innerHTML;
-	}
-
-	document.addEventListener('DOMContentLoaded', () => {
-		loadComments();
-
-		document.getElementById('comment-submit').addEventListener('click', async () => {
-			const author = document.getElementById('comment-author').value.trim();
-			const content = document.getElementById('comment-content').value.trim();
-			const status = document.getElementById('comment-status');
-			const btn = document.getElementById('comment-submit');
-
-			if (!author) { status.textContent = '请填写昵称'; return; }
-			if (!content) { status.textContent = '请填写评论内容'; return; }
-
-			btn.disabled = true;
-			status.textContent = '提交中...';
-
-			const path = location.pathname.replace(/\/$/, '') || '/';
-
-			try {
-				const res = await fetch(API + '/api/comment', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({ page: path, author, content }),
-				});
-				const data = await res.json();
-				if (data.success) {
-					status.textContent = '评论成功！';
-					document.getElementById('comment-content').value = '';
-					loadComments();
-				} else {
-					status.textContent = '评论失败: ' + (data.error || '未知错误');
-				}
-			} catch (e) {
-				status.textContent = '评论失败，请检查网络';
-			}
-			btn.disabled = false;
-		});
-	});
+	const TWTKOO_ENV_ID = 'https://twikoo.1683066.workers.dev';
 </script>
+<script
+	src="https://cdn.jsdelivr.net/npm/twikoo@1.6.41/dist/twikoo.all.min.js"
+	onload="twikoo.init({ envId: TWTKOO_ENV_ID, el: '#tcomment' })"
+	defer
+></script>
 
 <style>
-	.comment-wrapper {
+	.twikoo-wrapper {
 		margin-top: 3em;
 		padding-top: 2em;
 		border-top: 1px solid var(--color-border);
@@ -96,72 +26,5 @@ const API = 'https://aiwithme-comments.1683066.workers.dev';
 	.comments-title {
 		margin-bottom: 1em;
 		font-family: var(--font-heading);
-	}
-	#comment-author {
-		width: 100%;
-		max-width: 300px;
-		padding: 0.6em 1em;
-		margin-bottom: 0.8em;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		font-size: 0.95em;
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
-	#comment-content {
-		width: 100%;
-		padding: 0.8em 1em;
-		margin-bottom: 0.8em;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		font-size: 0.95em;
-		font-family: var(--font-body);
-		resize: vertical;
-		box-sizing: border-box;
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
-	#comment-submit {
-		padding: 0.6em 1.5em;
-		background: var(--color-primary);
-		color: white;
-		border: none;
-		border-radius: var(--radius-md);
-		font-size: 0.95em;
-		cursor: pointer;
-	}
-	#comment-submit:hover {
-		background: var(--color-primary-dark);
-	}
-	#comment-submit:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-	#comment-status {
-		margin-top: 0.5em;
-		font-size: 0.9em;
-		color: var(--color-text-secondary);
-	}
-	.comment-item {
-		padding: 1em 0;
-		border-bottom: 1px solid var(--color-border);
-	}
-	.comment-author {
-		font-weight: 600;
-		color: var(--color-primary);
-		margin-bottom: 0.2em;
-	}
-	.comment-time {
-		font-size: 0.8em;
-		color: var(--color-text-muted);
-		margin-bottom: 0.5em;
-	}
-	.comment-content {
-		line-height: 1.6;
-		color: var(--color-text);
-	}
-	.comment-empty {
-		color: var(--color-text-secondary);
-		font-style: italic;
 	}
 </style>
