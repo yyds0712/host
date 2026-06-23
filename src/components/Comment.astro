@@ -12,46 +12,29 @@
 	const TWIKOO_ENV_ID = 'https://twikoo.aiwithme.xyz';
 	const WEBHOOK_URL = 'https://aiwithme-auto-reply.1683066.workers.dev';
 
-	// Trigger AI reply after comment is submitted
 	function triggerAIReply() {
-		fetch(WEBHOOK_URL, { method: 'POST' }).catch(() => {});
+		setTimeout(() => {
+			fetch(WEBHOOK_URL, { method: 'POST' }).catch(() => {});
+		}, 2000);
 	}
 
-	// Watch for new comments via DOM changes
-	const observer = new MutationObserver(() => {
-		triggerAIReply();
-		observer.disconnect();
-	});
-
-	// Start observing when Twikoo is initialized
-	function startObserver() {
-		const target = document.getElementById('tcomment');
-		if (target) {
-			observer.observe(target, { childList: true, subtree: true, attributes: false });
-		}
-	}
-
-	// Hook into Twikoo's comment submit button
-	function hookSubmitButton() {
-		const checkExist = setInterval(() => {
-			const btn = document.querySelector('#tcomment .el-button--primary');
-			if (btn) {
-				btn.addEventListener('click', () => {
-					setTimeout(triggerAIReply, 3000);
-				});
-				clearInterval(checkExist);
-			}
-		}, 500);
-	}
-
-	// Init Twikoo and hooks
-	twikoo.init({ envId: TWIKOO_ENV_ID, el: '#tcomment' }).then(() => {
-		startObserver();
-		hookSubmitButton();
-	});
+	// Load Twikoo, then set up hooks
+	window.initTwikoo = function() {
+		twikoo.init({ envId: TWIKOO_ENV_ID, el: '#tcomment' }).then(() => {
+			// Watch comment submit
+			const checkBtn = setInterval(() => {
+				const btn = document.querySelector('#tcomment .el-button--primary');
+				if (btn) {
+					btn.addEventListener('click', triggerAIReply);
+					clearInterval(checkBtn);
+				}
+			}, 1000);
+		});
+	};
 </script>
 <script
 	src="https://cdn.jsdelivr.net/npm/twikoo@1.6.41/dist/twikoo.all.min.js"
+	onload="initTwikoo()"
 	defer
 ></script>
 
